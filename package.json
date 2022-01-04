@@ -1,0 +1,14 @@
+{
+  "name": "@open-automaton/automaton-cli",
+  "version": "0.0.1",
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^9.1.3"
+  },
+  "dependencies": {
+    "@open-automaton/automaton": "0.0.6",
+    "@open-automaton/cheerio-mining-engine": "0.0.8",
+    "@open-automaton/puppeteer-mining-engine": "0.0.7",
+    "app-term-kit": "^0.3.2"
+  }
+}
