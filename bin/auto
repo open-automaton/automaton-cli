@@ -58,7 +58,10 @@ app.command({
         ]
     ],
     action : function(argv, target, complete){
-        complete();
+        tool.performScrape(target, (err, result)=>{
+            console.log(result);
+            complete();
+        });
     }
 });
 
