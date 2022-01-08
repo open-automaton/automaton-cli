@@ -2,6 +2,23 @@
 const CLApp = require('app-term-kit');
 const tool = require('../src/tools.js');
 const fs = require('fs');
+//const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra')
+
+// add stealth plugin and use defaults (all evasion techniques)
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(StealthPlugin())
+const puppeteerArgs = [
+    '--enable-features=NetworkService',
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-web-security',
+    '--disable-features=IsolateOrigins,site-per-process',
+    //'--shm-size=3gb', // this solves the issue
+    '--disable-gpu',
+    '--window-size=1920x1080'
+]
 
 
 let app = new CLApp('automaton', {
@@ -62,6 +79,45 @@ app.command({
             console.log(result);
             complete();
         });
+    }
+});
+
+app.command({
+    name : 'fetch',
+    description: 'search for some segment of the data',
+    examples : [
+        [
+            '$0 fetch http://my.domain',
+            'fetch data from my.domain'
+        ]
+    ],
+    action : function(argv, target, complete){
+        puppeteer.launch({
+            headless: true
+        }).then((browser)=>{
+            browser.newPage().then((page)=>{
+                page.goto(
+                    target,
+                    { waitUntil: 'load' }
+                ).then((result)=>{
+                    page.evaluate(
+                        ()=> document.documentElement.outerHTML
+                    ).then((html)=>{
+                        console.log(html);
+                        process.exit();
+                    }).catch((ex4)=>{
+                        throw new Error('Failed to export HTML');
+                    });
+                }).catch((ex3)=>{
+                    console.log(ex3)
+                    throw new Error('failed to navigate to: '+target);
+                });
+            }).catch((ex2)=>{
+                throw new Error('Tab failed to open');
+            });
+        }).catch((ex)=>{
+            throw new Error('Puppeteer failed to launch');
+        })
     }
 });
 
