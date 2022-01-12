@@ -9,6 +9,7 @@
     "@open-automaton/automaton": "0.0.7",
     "@open-automaton/cheerio-mining-engine": "0.0.8",
     "@open-automaton/puppeteer-mining-engine": "0.0.7",
+    "@open-automaton/playwright-mining-engine": "0.0.8",
     "app-term-kit": "^0.3.2",
     "puppeteer": "^13.0.1",
     "puppeteer-extra": "^3.2.3",
