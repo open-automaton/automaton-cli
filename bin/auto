@@ -33,7 +33,7 @@ let app = new CLApp('automaton', {
 
 app.command({
     name : 'xpath',
-    description: 'search for some segment of the data',
+    description: 'search for provided xpath selection in a document',
     examples : [
         [
             '$0 xpath "//table/tbody/tr" dump.html',
@@ -53,7 +53,7 @@ app.command({
 
 app.command({
     name : 'regex',
-    description: 'search for some segment of the data',
+    description: 'search for provided regex selection in a document',
     examples : [
         [
             '$0 regex "<tr>(.*?)</tr>" dump.html',
@@ -65,26 +65,39 @@ app.command({
     }
 });
 
+const doScrape = function(argv, target, complete){
+    tool.performScrape(target, (err, result)=>{
+        console.log(result);
+        complete();
+    });
+}
+
 app.command({
     name : 'scrape',
-    description: 'search for some segment of the data',
+    description: 'perform a scrape with a given definition',
     examples : [
         [
             '$0 scrape ./bot.xml',
             'use the definition `./bot.xml` to scrape and return some data'
+        ],
+        [
+            '$0 scrape ./bot.xml --data \'{"name":"some-value"}\'',
+            'use the definition `./bot.xml` to scrape and return some data given the provided data'
         ]
     ],
-    action : function(argv, target, complete){
-        tool.performScrape(target, (err, result)=>{
-            console.log(result);
-            complete();
-        });
-    }
+    action : doScrape
+});
+
+app.command({
+    name : 'run',
+    description: 'perform a scrape with a given definition',
+    examples : [ ],
+    action : doScrape
 });
 
 app.command({
     name : 'fetch',
-    description: 'search for some segment of the data',
+    description: 'fetch the final DOM after load for a given URL',
     examples : [
         [
             '$0 fetch http://my.domain',
@@ -120,6 +133,15 @@ app.command({
         })
     }
 });
+
+app.argument('data', 'string', 'JSON payload defining data for the script', 1);
+
+app.argument('puppeteer-chromium', 'boolean', 'use a chromium instance through puppeteer', 0);
+app.argument('playwright-chromium', 'boolean', 'use a chromium instance through playwright', 0);
+app.argument('playwright-webkit', 'boolean', 'use a webkit instance through playwright', 0);
+app.argument('playwright-firefox', 'boolean', 'use a firefox instance through playwright', 0);
+app.argument('cheerio', 'boolean', 'use cheerio to do a textual scrape', 0);
+app.argument('jsdom', 'boolean', 'use jsdom + request to do DOM scrape', 0);
 
 app.header();
 app.footer();
