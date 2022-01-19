@@ -2,6 +2,7 @@ const Automaton = require('@open-automaton/automaton');
 const DOM = require('@open-automaton/automaton/src/dom-tool.js').DOM;
 const CheerioEngine = require('@open-automaton/cheerio-mining-engine');
 const PuppeteerEngine = require('@open-automaton/puppeteer-mining-engine');
+const exec = require('child_process').exec;
 
 let fileCache = {};
 let options = {
@@ -11,6 +12,14 @@ let options = {
 };
 
 module.exports = {
+    clExecute : (command, cb)=>{
+        let child = exec(command,
+          function (err, stdout, stderr){
+              let error = err || (stderr && new Error(stderr));
+              if(error) console.log('exec error: ' + error);
+              cb(error, (!error) && stdout);
+        });
+    },
     selectXpath : (selector, value, callback)=>{
         let selection = DOM.xpathText(selector, value);
         setTimeout(()=>{
