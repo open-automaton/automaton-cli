@@ -17,7 +17,7 @@ module.exports = {
           function (err, stdout, stderr){
               let error = err || (stderr && new Error(stderr));
               if(error) console.log('exec error: ' + error);
-              cb(error, (!error) && stdout);
+              cb(error?error:null, stdout);
         });
     },
     selectXpath : (selector, value, callback)=>{

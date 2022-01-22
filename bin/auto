@@ -44,7 +44,7 @@ app.command({
         let filename = argv._.pop();
         fs.readFile(filename, (err, body)=>{
             tool.selectXpath(target, body.toString(), (err, result)=>{
-                console.log(result);
+                console.log(JSON.stringify(result, null, '    '));
                 complete();
             });
         });
@@ -67,7 +67,7 @@ app.command({
 
 const doScrape = function(argv, target, complete){
     tool.performScrape(target, (err, result)=>{
-        console.log(result);
+        console.log(JSON.stringify(result, null, '    '));
         complete();
     });
 }
