@@ -44,7 +44,7 @@ app.command({
         let filename = argv._.pop();
         fs.readFile(filename, (err, body)=>{
             tool.selectXpath(target, body.toString(), (err, result)=>{
-                console.log(JSON.stringify(result, null, '    '));
+                process.stdout.write(JSON.stringify(result, null, '    '));
                 complete();
             });
         });
@@ -67,7 +67,7 @@ app.command({
 
 const doScrape = function(argv, target, complete){
     tool.performScrape(target, (err, result)=>{
-        console.log(JSON.stringify(result, null, '    '));
+        process.stdout.write(JSON.stringify(result, null, '    '));
         complete();
     });
 }
@@ -116,8 +116,10 @@ app.command({
                     page.evaluate(
                         ()=> document.documentElement.outerHTML
                     ).then((html)=>{
-                        console.log(html);
-                        process.exit();
+                        process.stdout.write(html);
+                        setTimeout(()=>{
+                            process.exit();
+                        }, 100);
                     }).catch((ex4)=>{
                         throw new Error('Failed to export HTML');
                     });

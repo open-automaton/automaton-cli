@@ -1,6 +1,7 @@
 const should = require('chai').should();
 const tool = require('../src/tools.js');
 const path = require('path');
+const arrays = require('async-arrays');
 const fs = require("fs");
 const os = require("os");
 
@@ -113,6 +114,41 @@ describe('automaton-cli', ()=>{
                     }
                 );
             });
+        });
+
+        it('scrapes automaton-cli github', function(done){
+            this.timeout(10000);
+            let tableRowSelector = "//div[@role='row']";
+            let columnValueSelector = "//div/span/a/text()";
+            let command = path.join(
+                __dirname, '..', 'bin', 'auto'
+            )+' fetch http://github.com/open-automaton/automaton-cli ';
+            tool.clExecute(
+                command, (exerr, output)=>{
+                    should.not.exist(exerr);
+                    let results = {};
+                    tool.selectXpath(tableRowSelector, output, (err, rows)=>{
+                        arrays.forEachEmission(rows, (row, index, complete)=>{
+                            tool.selectXpath(
+                                columnValueSelector,
+                                rows[index] || [],
+                                (err, selection)=>{
+                                    should.not.exist(err);
+                                    if(selection.length){
+                                        results[selection[0]] = selection[1];
+                                    }
+                                    complete();
+                                }
+                            );
+                        }, ()=>{
+                            should.exist(results['README.md']);
+                            should.exist(results['package.json']);
+                            should.exist(results['bin']);
+                            done();
+                        });
+                    });
+                }
+            );
         });
     });
 });
