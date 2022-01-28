@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 const CLApp = require('app-term-kit');
 const tool = require('../src/tools.js');
+const Action = require('@open-automaton/automaton/src/automaton-action.js');
 const fs = require('fs');
 //const puppeteer = require('puppeteer');
-const puppeteer = require('puppeteer-extra')
+const puppeteer = require('puppeteer-extra');
 
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
@@ -52,6 +53,26 @@ app.command({
 });
 
 app.command({
+    name : 'xpath-form-inputs',
+    description: 'search for provided inputs to the provided xpath form selection in a document',
+    examples : [],
+    action : function(argv, formTarget, complete){
+        let inputTarget = [
+            formTarget+'//input',
+            formTarget+'//select',
+            formTarget+'//textarea'
+        ].join('|');
+        let filename = argv._.pop();
+        fs.readFile(filename, (err, body)=>{
+            tool.selectXpath(inputTarget, body.toString(), (err, result)=>{
+                process.stdout.write(JSON.stringify(result, null, '    '));
+                complete();
+            });
+        });
+    }
+});
+
+app.command({
     name : 'regex',
     description: 'search for provided regex selection in a document',
     examples : [
@@ -66,9 +87,12 @@ app.command({
 });
 
 const doScrape = function(argv, target, complete){
+    if(argv.debug) Action.log.level = Action.log.levels.DEBUG;
+    //Action.log.level = Action.log.levels.TRACE;
     tool.performScrape(target, (err, result)=>{
-        process.stdout.write(JSON.stringify(result, null, '    '));
+        console.log(result);
         complete();
+        setTimeout(()=>{ process.exit() }, 1000)
     });
 }
 
@@ -137,6 +161,7 @@ app.command({
 });
 
 app.argument('data', 'string', 'JSON payload defining data for the script', 1);
+app.argument('debug', 'boolean', 'output debugging info', 0);
 
 app.argument('puppeteer-chromium', 'boolean', 'use a chromium instance through puppeteer', 0);
 app.argument('playwright-chromium', 'boolean', 'use a chromium instance through playwright', 0);

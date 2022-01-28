@@ -2,20 +2,10 @@ const should = require('chai').should();
 const tool = require('../src/tools.js');
 const path = require('path');
 const arrays = require('async-arrays');
-const fs = require("fs");
-const os = require("os");
+//TODO: test server, for self scraper, like in the canonical tests
 
 const hasArgument = (arg, str)=>{
     return !!(str.match(new RegExp('\-\-'+arg)));
-}
-
-const makeTempFile = (body, cb)=>{
-    let name = path.join(os.tmpdir(), Math.floor(Math.random()*1000000)+'.temp');
-    fs.writeFile(name, body, (err)=>{
-        cb(err, (!err) && name, (callback)=>{
-            fs.unlink(name, callback);
-        });
-    });
 }
 
 describe('automaton-cli', ()=>{
@@ -65,55 +55,66 @@ describe('automaton-cli', ()=>{
         });
 
         it('outputs xpath', (done)=>{
-            makeTempFile(`
-            <table>
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>name</th>
-                        <th>value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                       <th>a-3849834</th>
-                       <th>something</th>
-                       <th>247</th>
-                    </tr>
-                    <tr>
-                       <th>a-3845464</th>
-                       <th>something-else</th>
-                       <th>212</th>
-                    </tr>
-                    <tr>
-                       <th>a-3832327</th>
-                       <th>something-different</th>
-                       <th>56</th>
-                    </tr>
-                </tbody>
-            </table>`, (err, filename, deleteFile)=>{
-                should.not.exist(err);
-                let command = path.join(
-                    __dirname, '..', 'bin', 'auto'
-                )+' xpath //tr '+filename;
-                tool.clExecute(
-                    command, (exerr, output)=>{
-                        should.not.exist(exerr);
-                        let data = null;
-                        try{
-                            data = JSON.parse(output);
-                        }catch(ex){
-                            should.not.exist(ex);
-                        }
-                        Array.isArray(data).should.equal(true);
-                        data.length.should.equal(4);
-                        deleteFile((delError)=>{
-                            should.not.exist(delError);
-                            done();
-                        });
+            tool.selectCLIXPath(
+                '//tr',
+                `<table>
+                    <thead>
+                        <tr>
+                            <th>id</th><th>name</th><th>value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                           <th>a-3849834</th><th>something</th><th>247</th>
+                        </tr>
+                        <tr>
+                           <th>a-3845464</th><th>something-else</th><th>212</th>
+                        </tr>
+                        <tr>
+                           <th>a-3832327</th><th>something-different</th><th>56</th>
+                        </tr>
+                    </tbody>
+                </table>`,
+                (exerr, output)=>{
+                    should.not.exist(exerr);
+                    let data = null;
+                    try{
+                        data = JSON.parse(output);
+                    }catch(ex){
+                        console.log(ex)
+                        should.not.exist(ex);
                     }
-                );
-            });
+                    Array.isArray(data).should.equal(true);
+                    data.length.should.equal(4);
+                    done();
+                }
+            );
+        });
+
+        it('can execute an arbitrary definition', function(done){
+            this.timeout(20000);
+            tool.performCLIScrape({
+                query: "automaton npm"
+            }, `<go url="https://sfbay.craigslist.org/search/apa">
+                    <set xpath="//li[@class='result-row']" variable="matches">
+                        <set xpath="//time[@class='result-date']/text()" variable="time"></set>
+                        <set xpath="//span[@class='result-meta']/span[@class='result-price']/text()" variable="price"></set>
+                        <set xpath="//span[@class='result-meta']/span[@class='housing']/text()" variable="housing"></set>
+                        <set xpath="string(//img/@src)" variable="link"></set>
+                    </set>
+                    <emit variables="matches"></emit>
+                </go>`, (err, data)=>{
+                    should.not.exist(err);
+                    should.exist(data);
+                    should.exist(data.matches);
+                    data.matches.length.should.be.above(5);
+                    should.exist(data.matches[0].time);
+                    should.exist(data.matches[0].price);
+                    should.exist(data.matches[0].housing);
+                    should.exist(data.matches[0].link);
+                    done();
+                }
+            );
         });
 
         it('scrapes automaton-cli github', function(done){
